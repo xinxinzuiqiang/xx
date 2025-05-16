@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拼图游戏与抽奖转盘</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>拼图游戏</h1>
+        
+        <div id="game-container">
+            <!-- 游戏开始界面 -->
+            <div id="start-screen">
+                <button id="start-button">开始游戏</button>
+                <div class="image-selector">
+                    <label>选择图片：</label>
+                    <select id="image-select">
+                        <option value="image1">图片1</option>
+                        <option value="image2">图片2</option>
+                        <option value="image3">图片3</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- 拼图游戏区域 -->
+            <div id="puzzle-container" class="hidden">
+                <div id="timer">时间: 0秒</div>
+                <div id="moves">步数: 0</div>
+                
+                <!-- 目标拼图区域 -->
+                <div id="target-board"></div>
+                
+                <!-- 拼图选择区域 -->
+                <div id="pieces-selection"></div>
+                
+                <button id="reset-button">重置</button>
+            </div>
+            
+            <!-- 游戏胜利界面 -->
+            <div id="win-screen" class="hidden">
+                <h2>恭喜你完成拼图!</h2>
+                <div id="game-stats">
+                    <p id="final-time"></p>
+                    <p id="final-moves"></p>
+                </div>
+                <button id="spin-button">抽奖</button>
+            </div>
+        </div>
+        
+        <!-- 抽奖转盘 -->
+        <div id="wheel-container" class="hidden">
+            <h2>幸运大转盘</h2>
+            <div class="wheel-outer">
+                <div class="wheel-inner" id="wheel">
+                    <!-- 转盘将通过JS动态生成 -->
+                </div>
+                <div class="pointer"></div>
+            </div>
+            <div id="prize-result" class="hidden">
+                <h3>恭喜您获得：<span id="prize-name"></span></h3>
+                <button id="play-again">再玩一次</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
