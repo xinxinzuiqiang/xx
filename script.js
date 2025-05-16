@@ -102,10 +102,12 @@ function createPuzzle() {
             cell.dataset.row = row;
             cell.dataset.col = col;
             
-            // 修改后的点击事件
+            // 修改点击事件
             cell.addEventListener('click', () => {
-                // 检查是否已存在正确拼图
-                if (!cell.querySelector('.correct') && selectedPiece && puzzleState[row][col] === null) {
+                // 只有当有选中的拼图块时才能放置
+                // 且不能放在已有正确拼图的位置
+                if (selectedPiece && 
+                    !(puzzleState[row][col] && puzzleState[row][col].isCorrect)) {
                     placePiece(selectedPiece, row, col);
                 }
             });
@@ -179,29 +181,82 @@ function placePiece(pieceElement, row, col) {
     placedPiece.style.backgroundImage = pieceElement.style.backgroundImage;
     placedPiece.style.backgroundSize = pieceElement.style.backgroundSize;
     placedPiece.style.backgroundPosition = pieceElement.style.backgroundPosition;
+    
+    // 存储原始位置信息，用于后续可能的移除
+    placedPiece.dataset.originalRow = originalRow;
+    placedPiece.dataset.originalCol = originalCol;
+    placedPiece.dataset.pieceIndex = pieceElement.dataset.index;
 
     // 将拼图块放入目标区域
     const targetCell = document.querySelector(`.target-cell[data-row="${row}"][data-col="${col}"]`);
+    
+    // 如果单元格已有拼图，先移除
+    if (puzzleState[row][col] !== null) {
+        const oldPiece = targetCell.querySelector('.placed-piece');
+        if (oldPiece) {
+            targetCell.removeChild(oldPiece);
+            
+            // 恢复原拼图块的可用状态
+            const oldPieceIndex = oldPiece.dataset.pieceIndex;
+            const oldPieceElement = document.querySelector(`.puzzle-piece[data-index="${oldPieceIndex}"]`);
+            if (oldPieceElement) {
+                oldPieceElement.classList.remove('placed');
+                if (oldPieceElement.classList.contains('correct')) {
+                    oldPieceElement.classList.remove('correct');
+                }
+            }
+        }
+    }
+    
     targetCell.appendChild(placedPiece);
     
-    // 更新拼图状态（新增isCorrect属性）
+    // 更新拼图状态
     puzzleState[row][col] = { 
         originalRow, 
         originalCol,
-        isCorrect 
+        isCorrect,
+        pieceIndex: pieceElement.dataset.index
     };
 
     // 如果正确放置，禁用该拼图块
-    if(isCorrect) {
+    if (isCorrect) {
         pieceElement.classList.add('placed', 'correct');
         targetCell.classList.add('correct-cell');
+        
+        // 为正确放置的拼图添加点击事件阻止
+        placedPiece.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
     } else {
         pieceElement.classList.add('placed');
+        
+        // 为错误放置的拼图添加点击事件，允许移除
+        placedPiece.addEventListener('click', (e) => {
+            // 阻止事件冒泡，避免触发单元格的点击事件
+            e.stopPropagation();
+            
+            // 移除拼图
+            targetCell.removeChild(placedPiece);
+            
+            // 更新拼图状态
+            puzzleState[row][col] = null;
+            
+            // 恢复拼图块的可用状态
+            pieceElement.classList.remove('placed');
+            
+            // 如果当前没有选中的拼图，则选中这个
+            if (!selectedPiece) {
+                selectedPiece = pieceElement;
+                pieceElement.classList.add('selected');
+            }
+        });
     }
-    
+
     // 取消选中
-    pieceElement.classList.remove('selected');
-    selectedPiece = null;
+    if (selectedPiece) {
+        selectedPiece.classList.remove('selected');
+        selectedPiece = null;
+    }
     
     // 增加步数
     moves++;
