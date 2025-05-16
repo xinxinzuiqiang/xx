@@ -10,8 +10,8 @@ let selectedPiece = null;
 
 // 抽奖转盘配置
 const prizes = [
-    { name: "一等奖", color: "#e74c3c", probability: 0.05 },
-    { name: "二等奖", color: "#3498db", probability: 0.1 },
+    { name: "iphone 16pro 256g", color: "#e74c3c", probability: 0.05 },
+    { name: "iphone 16pro 256g 2000优惠券", color: "#3498db", probability: 0.1 },
     { name: "三等奖", color: "#2ecc71", probability: 0.15 },
     { name: "四等奖", color: "#f39c12", probability: 0.2 },
     { name: "五等奖", color: "#9b59b6", probability: 0.2 },
@@ -102,9 +102,10 @@ function createPuzzle() {
             cell.dataset.row = row;
             cell.dataset.col = col;
             
-            // 添加点击事件，用于放置拼图
+            // 修改后的点击事件
             cell.addEventListener('click', () => {
-                if (selectedPiece && puzzleState[row][col] === null) {
+                // 检查是否已存在正确拼图
+                if (!cell.querySelector('.correct') && selectedPiece && puzzleState[row][col] === null) {
                     placePiece(selectedPiece, row, col);
                 }
             });
@@ -169,22 +170,34 @@ function placePiece(pieceElement, row, col) {
     const originalRow = parseInt(pieceElement.dataset.originalRow);
     const originalCol = parseInt(pieceElement.dataset.originalCol);
     
+    // 检查是否放置正确
+    const isCorrect = (row === originalRow && col === originalCol);
+
     // 创建放置在目标区域的拼图块
     const placedPiece = document.createElement('div');
-    placedPiece.className = 'placed-piece';
+    placedPiece.className = 'placed-piece' + (isCorrect ? ' correct' : '');
     placedPiece.style.backgroundImage = pieceElement.style.backgroundImage;
     placedPiece.style.backgroundSize = pieceElement.style.backgroundSize;
     placedPiece.style.backgroundPosition = pieceElement.style.backgroundPosition;
-    
+
     // 将拼图块放入目标区域
     const targetCell = document.querySelector(`.target-cell[data-row="${row}"][data-col="${col}"]`);
     targetCell.appendChild(placedPiece);
     
-    // 更新拼图状态
-    puzzleState[row][col] = { originalRow, originalCol };
-    
-    // 标记拼图块为已放置
-    pieceElement.classList.add('placed');
+    // 更新拼图状态（新增isCorrect属性）
+    puzzleState[row][col] = { 
+        originalRow, 
+        originalCol,
+        isCorrect 
+    };
+
+    // 如果正确放置，禁用该拼图块
+    if(isCorrect) {
+        pieceElement.classList.add('placed', 'correct');
+        targetCell.classList.add('correct-cell');
+    } else {
+        pieceElement.classList.add('placed');
+    }
     
     // 取消选中
     pieceElement.classList.remove('selected');
