@@ -318,29 +318,84 @@ function startWheel() {
     spinWheel();
 }
 
-// 创建转盘
+// 创建转盘 - 使用SVG方式
 function createWheel() {
     wheel.innerHTML = '';
     
-    // 计算每个奖项的角度 - 视觉上平均分配
+    // 创建SVG元素
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("width", "100%");
+    svg.setAttribute("height", "100%");
+    svg.setAttribute("viewBox", "-100 -100 200 200");
+    
+    // 计算每个奖项的角度
     const segmentAngle = 360 / prizes.length;
     
-    // 创建转盘扇形 - 视觉上均等
+    // 创建转盘扇形
     prizes.forEach((prize, index) => {
-        const segment = document.createElement('div');
-        segment.className = 'wheel-segment';
-        segment.style.backgroundColor = prize.color;
-        segment.style.transform = `rotate(${index * segmentAngle}deg)`;
-        segment.style.clipPath = `polygon(0 0, 100% 0, 100% 100%)`;
+        // 计算扇形的起始和结束角度
+        const startAngle = index * segmentAngle;
+        const endAngle = (index + 1) * segmentAngle;
         
-        // 添加奖项名称
-        const nameElement = document.createElement('div');
-        nameElement.textContent = prize.name;
-        nameElement.style.transform = `rotate(${segmentAngle / 2}deg) translateX(30%)`;
-        segment.appendChild(nameElement);
+        // 转换为弧度
+        const startRad = (startAngle - 90) * Math.PI / 180;
+        const endRad = (endAngle - 90) * Math.PI / 180;
         
-        wheel.appendChild(segment);
+        // 计算扇形的路径
+        const x1 = 95 * Math.cos(startRad);
+        const y1 = 95 * Math.sin(startRad);
+        const x2 = 95 * Math.cos(endRad);
+        const y2 = 95 * Math.sin(endRad);
+        
+        // 创建扇形路径
+        const path = document.createElementNS(svgNS, "path");
+        path.setAttribute("d", `M 0 0 L ${x1} ${y1} A 95 95 0 0 1 ${x2} ${y2} Z`);
+        path.setAttribute("fill", prize.color);
+        path.setAttribute("stroke", prize.color);
+        path.setAttribute("stroke-width", "1");
+        svg.appendChild(path);
+        
+        // 添加文字 - 从圆边向圆心方向排列
+        const midAngle = (startAngle + endAngle) / 2;
+        const midRad = midAngle * Math.PI / 180;
+        
+        // 计算文字位置 - 更靠近圆心
+        const textDistance = 50; // 文字距离圆心的距离，更靠近圆心
+        const textX = textDistance * Math.cos(midRad - Math.PI/2);
+        const textY = textDistance * Math.sin(midRad - Math.PI/2);
+        
+        // 创建一个组来包含文字，便于整体旋转
+        const textGroup = document.createElementNS(svgNS, "g");
+        textGroup.setAttribute("transform", `translate(${textX}, ${textY}) rotate(${midAngle - 90})`);
+        
+        // 创建文字 - 不使用背景
+        const text = document.createElementNS(svgNS, "text");
+        text.setAttribute("x", 0);
+        text.setAttribute("y", 4); // 微调垂直位置
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("fill", "white");
+        text.setAttribute("font-size", "8"); // 保持小字体大小
+        text.setAttribute("font-weight", "bold");
+        text.setAttribute("stroke", "black"); // 添加黑色描边，增强可读性
+        text.setAttribute("stroke-width", "0.5");
+        text.textContent = prize.name;
+        
+        textGroup.appendChild(text);
+        svg.appendChild(textGroup);
     });
+    
+    // 添加中心圆点
+    const centerCircle = document.createElementNS(svgNS, "circle");
+    centerCircle.setAttribute("cx", "0");
+    centerCircle.setAttribute("cy", "0");
+    centerCircle.setAttribute("r", "5");
+    centerCircle.setAttribute("fill", "#f39c12");
+    centerCircle.setAttribute("stroke", "#e67e22");
+    centerCircle.setAttribute("stroke-width", "1");
+    svg.appendChild(centerCircle);
+    
+    wheel.appendChild(svg);
 }
 
 // 旋转转盘
@@ -363,20 +418,29 @@ function spinWheel() {
     }, 5000); // 5秒后显示结果
 }
 
-// 根据概率确定中奖结果 - 使用您设定的概率
+// 根据概率确定中奖结果 - 修改后的算法
 function determineWinningPrize() {
-    const random = Math.random() * 100; // 使用0-100的范围更直观
-    let cumulativeProbability = 0;
+    // 创建一个包含所有可能奖项的数组，按照概率分配数量
+    const totalSlots = 10000; // 使用更大的数字提高精度
+    const prizePool = [];
     
-    for (const prize of prizes) {
-        cumulativeProbability += prize.probability;
-        if (random < cumulativeProbability) {
-            return prize.name;
+    // 根据概率填充奖池
+    prizes.forEach(prize => {
+        // 计算该奖项应占的位置数量
+        const slots = Math.round(prize.probability / 100 * totalSlots);
+        for (let i = 0; i < slots; i++) {
+            prizePool.push(prize.name);
         }
+    });
+    
+    // 如果奖池为空（所有概率都为0），则返回最后一个奖项
+    if (prizePool.length === 0) {
+        return prizes[1].name;
     }
     
-    // 默认返回最后一个奖项
-    return prizes[prizes.length - 1].name;
+    // 随机选择一个奖项
+    const randomIndex = Math.floor(Math.random() * prizePool.length);
+    return prizePool[randomIndex];
 }
 
 // 再玩一次
