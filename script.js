@@ -10,20 +10,18 @@ let selectedPiece = null;
 
 // 抽奖转盘配置
 const prizes = [
-    { name: "iphone 16pro 256g", color: "#e74c3c", probability: 0.05 },
-    { name: "iphone 16pro 256g 2000优惠券", color: "#3498db", probability: 0.1 },
-    { name: "三等奖", color: "#2ecc71", probability: 0.15 },
-    { name: "四等奖", color: "#f39c12", probability: 0.2 },
-    { name: "五等奖", color: "#9b59b6", probability: 0.2 },
-    { name: "谢谢参与", color: "#95a5a6", probability: 0.3 }
+    { name: "iphone 16pro 256g", color: "#e74c3c", probability: 0.0527 },
+    { name: "2000元优惠券", color: "#3498db", probability: 94.473 },
+    { name: "1000元优惠券", color: "#2ecc71", probability: 0 },
+    { name: "100元优惠券", color: "#f39c12", probability: 0 },
+    { name: "10元优惠券", color: "#9b59b6", probability: 0 },
+    { name: "0元优惠券", color: "#95a5a6", probability: 0 }
 ];
 
 // 图片配置
 const images = {
-    image1: "https://picsum.photos/id/237/500/500", // 狗狗图片
-    image2: "https://picsum.photos/id/1015/500/500", // 风景图片
-    image3: "https://picsum.photos/id/1074/500/500"  // 猫咪图片
-};
+    image1: "./1.jpg"}
+   
 
 // DOM 元素
 const startScreen = document.getElementById('start-screen');
@@ -324,10 +322,10 @@ function startWheel() {
 function createWheel() {
     wheel.innerHTML = '';
     
-    // 计算每个奖项的角度
+    // 计算每个奖项的角度 - 视觉上平均分配
     const segmentAngle = 360 / prizes.length;
     
-    // 创建转盘扇形
+    // 创建转盘扇形 - 视觉上均等
     prizes.forEach((prize, index) => {
         const segment = document.createElement('div');
         segment.className = 'wheel-segment';
@@ -365,9 +363,9 @@ function spinWheel() {
     }, 5000); // 5秒后显示结果
 }
 
-// 根据概率确定中奖结果
+// 根据概率确定中奖结果 - 使用您设定的概率
 function determineWinningPrize() {
-    const random = Math.random();
+    const random = Math.random() * 100; // 使用0-100的范围更直观
     let cumulativeProbability = 0;
     
     for (const prize of prizes) {
